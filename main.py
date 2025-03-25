@@ -10,21 +10,24 @@ import time
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
-load_dotenv()
+if not load_dotenv(override=True):
+    print("Failed to load environment variables from .env file")
 
 # Get API configuration for both models from environment variables
 api_key_1 = os.getenv("API_KEY_1")
 base_url_1 = os.getenv("BASE_URL_1")
-model_1 = os.getenv("MODEL_1", "gpt-4-turbo-2024-04-09")  # Default model if not specified
+model_1 = os.getenv("MODEL_1")
 
 api_key_2 = os.getenv("API_KEY_2")
 base_url_2 = os.getenv("BASE_URL_2")
-model_2 = os.getenv("MODEL_2", "claude-3-opus-20240229")  # Default model if not specified
+model_2 = os.getenv("MODEL_2")
 
 # Create clients for both models - removing any potential proxy settings that might be in environment
 # Use consistent initialization approach for both clients
 GPT_client = OpenAI(api_key=api_key_1, base_url=base_url_1)
+print("Using GPT model:", model_1)
 Claude_client = OpenAI(api_key=api_key_2, base_url=base_url_2)
+print("Using Claude model:", model_2)
 
 question = """
 3、A 与 B 二人进行 " 抽鬼牌 "游戏 。游戏开始时， A 手中有n张两两不同的牌 。 B 手上有n+1张牌，其中n张牌与 A 手中的牌相同，另一张为"鬼牌 "，与其他所有牌都不同。游戏规则为：

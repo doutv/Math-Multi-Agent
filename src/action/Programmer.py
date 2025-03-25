@@ -4,6 +4,9 @@ from subprocess import Popen, PIPE, TimeoutExpired
 import os
 from openai import OpenAI
 import sys
+import dotenv
+
+dotenv.load_dotenv()
 
 # 获取当前Python解释器的路径
 current_python_executable = sys.executable
@@ -13,8 +16,8 @@ class Python_Programmer:
     def __init__(self, problem):
         self.problem = problem
         self.client = OpenAI(
-            base_url="输入中转地址",
-            api_key="输入GPT密钥",
+            base_url=os.getenv("BASE_URL_2"),
+            api_key=os.getenv("API_KEY_2"),
         )
 
     def run_code(self, code, timeout=600):
@@ -46,7 +49,7 @@ class Python_Programmer:
         返回:
         - 模型的响应内容，或在重试次数耗尽后返回None
         """
-        MODEL = "gpt-4-turbo-2024-04-09"
+        MODEL = os.getenv("MODEL_2")
         attempt = 0
 
         while attempt < max_retries:
