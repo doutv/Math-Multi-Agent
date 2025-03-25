@@ -2,26 +2,32 @@
 from openai import OpenAI
 from src.action.Calculate import WolframAlphaQuery, simple_calculate
 from src.action import Programmer
-print('ok')
-import openai
 import os
 import re
 import ast
 from datetime import datetime
 import time
+from dotenv import load_dotenv
 
-api_key_1 = "输入GPT密钥"
-base_url_1 = "输入转接地址"
+# Load environment variables from .env file
+load_dotenv()
 
-api_key_2 = "输入Claude密钥"
-base_url_2 = "输入转接地址"
+# Get API configuration for both models from environment variables
+api_key_1 = os.getenv("API_KEY_1")
+base_url_1 = os.getenv("BASE_URL_1")
+model_1 = os.getenv("MODEL_1", "gpt-4-turbo-2024-04-09")  # Default model if not specified
 
-GPT_client = openai.Client(api_key=api_key_1, base_url=base_url_1)
+api_key_2 = os.getenv("API_KEY_2")
+base_url_2 = os.getenv("BASE_URL_2")
+model_2 = os.getenv("MODEL_2", "claude-3-opus-20240229")  # Default model if not specified
 
+# Create clients for both models - removing any potential proxy settings that might be in environment
+# Use consistent initialization approach for both clients
+GPT_client = OpenAI(api_key=api_key_1, base_url=base_url_1)
 Claude_client = OpenAI(api_key=api_key_2, base_url=base_url_2)
 
 question = """
-3、A 与 B 二人进行 “ 抽鬼牌 ”游戏 。游戏开始时， A 手中有n张两两不同的牌 。 B 手上有n+1张牌，其中n张牌与 A 手中的牌相同，另一张为“鬼牌 ”，与其他所有牌都不同。游戏规则为：
+3、A 与 B 二人进行 " 抽鬼牌 "游戏 。游戏开始时， A 手中有n张两两不同的牌 。 B 手上有n+1张牌，其中n张牌与 A 手中的牌相同，另一张为"鬼牌 "，与其他所有牌都不同。游戏规则为：
 
 i) 双方交替从对方手中抽取一张牌， A 先从 B 手中抽取。
 
@@ -57,13 +63,12 @@ def askLLM(messages, max_retries=10, delay=2):
     返回:
     - 模型的响应内容，或在重试次数耗尽后返回None
     """
-    MODEL = "gpt-4-turbo-2024-04-09"
     attempt = 0
 
     while attempt < max_retries:
         try:
             response = GPT_client.chat.completions.create(
-                model=MODEL, messages=messages, temperature=0.7, max_tokens=3000
+                model=model_1, messages=messages, temperature=0.7, max_tokens=3000
             )
             return response.choices[0].message.content
         except Exception as e:
@@ -80,18 +85,15 @@ def actLLM(messages, the_model, max_retries=10, delay=2):
 
     while attempt < max_retries:
         try:
-
             if the_model == "GPT":
-                MODEL = "gpt-4-turbo-2024-04-09"
                 response = GPT_client.chat.completions.create(
-                    model=MODEL, messages=messages, temperature=0.7, max_tokens=3000
+                    model=model_1, messages=messages, temperature=0.7, max_tokens=3000
                 )
                 return response.choices[0].message.content
 
             if the_model == "Claude":
-                MODEL = "claude-3-opus-20240229"
                 response = Claude_client.chat.completions.create(
-                    model=MODEL, messages=messages, temperature=0.7, max_tokens=3000
+                    model=model_2, messages=messages, temperature=0.7, max_tokens=3000
                 )
                 return response.choices[0].message.content
 
@@ -122,7 +124,7 @@ def choose_action(list, message, question, the_model):
     query = list[1]
 
     if action == "wolfram_alpha":
-        app_id = '输入你的wolfram_alpha key'
+        app_id = os.getenv("WOLFRAM_ALPHA_APP_ID")
         Wolfram = WolframAlphaQuery(app_id)
         response_data = Wolfram.send_query(query)
         if response_data:
@@ -297,8 +299,7 @@ def main():
                            """},
                            {"role": "user", "content": f"\n原问题：{question}\n\n解题过程：{answer_article}"}]
 
-        model = "Claude"
-        summary = actLLM(summary_message, model)
+        summary = actLLM(summary_message, "Claude")
 
         summary = f"关键解题步骤摘要及结论：\n\n{summary}\n\n"
 
